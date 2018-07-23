@@ -51,6 +51,7 @@ public class latkAnimVR : CustomImporter {
     }
 
     public override void Export(StageData stage, string path) {
+        LightningArtist latk = new LightningArtist();
         File.WriteAllText(path, stage.name);
     }
 
