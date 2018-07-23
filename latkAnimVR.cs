@@ -1,5 +1,6 @@
 ﻿using AnimVRFilePlugin;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -174,67 +175,16 @@ public class latkAnimVR : CustomImporter
         saveJsonAsZip(url, tempName, string.Join("\n", s.ToArray()));
     }
 
-    /*
-    public IEnumerator readLatkStrokes() {
-        Debug.Log("*** Begin reading...");
-        isReadingFile = true;
+    public void readLatkStrokes(ref StageData stage, string path) {
+        JSONNode jsonNode = getJsonFromZip(File.ReadAllBytes(path));
 
-        string ext = Path.GetExtension(readFileName).ToLower();
-        Debug.Log("Found extension " + ext);
-        bool useZip = (ext == ".latk" || ext == ".zip");
-
-        for (int h = 0; h < layerList.Count; h++) {
-            for (int i = 0; i < layerList[h].Frames.Count; i++) {
-                Destroy(layerList[h].Frames[i].gameObject);
-            }
-            Destroy(layerList[h].gameObject);
-        }
-        layerList = new List<LatkLayer>();
-
-        string url = "";
-
-#if UNITY_ANDROID
-		url = Path.Combine("jar:file://" + Application.dataPath + "!/assets/", readFileName);
-#endif
-
-#if UNITY_IOS
-		url = Path.Combine("file://" + Application.dataPath + "/Raw", readFileName);
-#endif
-
-#if UNITY_EDITOR
-        url = Path.Combine("file://" + Application.dataPath, readFileName);
-#endif
-
-#if UNITY_STANDALONE_WIN
-        url = Path.Combine("file://" + Application.dataPath, readFileName);
-#endif
-
-#if UNITY_STANDALONE_OSX
-		url = Path.Combine("file://" + Application.dataPath, readFileName);		
-#endif
-
-#if UNITY_WSA
-		url = Path.Combine("file://" + Application.dataPath, readFileName);		
-#endif
-
-        WWW www = new WWW(url);
-        yield return www;
-
-        Debug.Log("+++ File reading finished. Begin parsing...");
-        yield return new WaitForSeconds(consoleUpdateInterval);
-
-        if (useZip) {
-            jsonNode = getJsonFromZip(www.bytes);
-        } else {
-            jsonNode = JSON.Parse(www.text);
-        }
-
+        /*
         for (int f = 0; f < jsonNode["grease_pencil"][0]["layers"].Count; f++) {
+            int currentLayer = f;
             instantiateLayer();
-            currentLayer = f;
             layerList[currentLayer].name = jsonNode["grease_pencil"][0]["layers"][f]["name"];
             for (int h = 0; h < jsonNode["grease_pencil"][0]["layers"][f]["frames"].Count; h++) {
-                Debug.Log("Starting frame " + (layerList[currentLayer].currentFrame + 1) + ".");
+                int currentFrame = h;
                 instantiateFrame();
                 layerList[currentLayer].currentFrame = h;
 
@@ -257,57 +207,46 @@ public class latkAnimVR : CustomImporter
                         float y = jsonNode["grease_pencil"][0]["layers"][f]["frames"][h]["strokes"][i]["points"][j]["co"][1].AsFloat;
                         float z = jsonNode["grease_pencil"][0]["layers"][f]["frames"][h]["strokes"][i]["points"][j]["co"][2].AsFloat;
 
-                        Vector3 p = applyTransformMatrix(new Vector3(x, y, z));
+                        Vector3 p = new Vector3(x, y, z); //applyTransformMatrix(new Vector3(x, y, z));
 
                         layerList[currentLayer].Frames[layerList[currentLayer].currentFrame].Lines[layerList[currentLayer].Frames[layerList[currentLayer].currentFrame].Lines.Count - 1].points.Add(p);
                     }
-
-                    Debug.Log("Adding frame " + (layerList[currentLayer].currentFrame + 1) + ": stroke " + (i + 1) + " of " + layerList[currentLayer].Frames[layerList[currentLayer].currentFrame].Lines.Count + ".");
-                }
-                if (textMesh != null) textMesh.text = "READING " + (layerList[currentLayer].currentFrame + 1) + " / " + jsonNode["grease_pencil"][0]["layers"][0]["frames"].Count;
-                Debug.Log("Ending frame " + (layerList[currentLayer].currentFrame + 1) + ".");
-                yield return new WaitForSeconds(consoleUpdateInterval);
-            }
-
-
-            for (int h = 0; h < layerList[currentLayer].Frames.Count; h++) {
-                layerList[currentLayer].currentFrame = h;
-                layerList[currentLayer].Frames[layerList[currentLayer].currentFrame].isDirty = true;
-                if (checkEmptyFrame(layerList[currentLayer].currentFrame)) {
-                    if (fillEmptyMethod == FillEmptyMethod.WRITE) {
-                        copyFramePointsForward(layerList[currentLayer].currentFrame);
-                    }
-                }
-            }
-
-            layerList[currentLayer].currentFrame = 0;
-
-            for (int h = 0; h < layerList[currentLayer].Frames.Count; h++) {
-                if (h != layerList[currentLayer].currentFrame) {
-                    layerList[currentLayer].Frames[h].showFrame(false);
-                } else {
-                    layerList[currentLayer].Frames[h].showFrame(true);
                 }
             }
         }
+        */
+    }
 
-        if (newLayerOnRead) {
-            instantiateLayer();
-            currentLayer = layerList.Count - 1;
-            instantiateFrame();
-        }
+    /*
+    private Matrix4x4 transformMatrix;
 
-        Debug.Log("*** Read " + url);
-        isReadingFile = false;
-        if (playOnStart) isPlaying = true;
+    private void updateTransformMatrix() {
+        transformMatrix = Matrix4x4.TRS(transform.position, transform.rotation, transform.localScale);
+    }
+
+    private Vector3 applyTransformMatrix(Vector3 p) {
+        return transformMatrix.MultiplyPoint3x4(p);
     }
     */
 
-    void saveJsonAsZip(string url, string fileName, string s) {
-        // https://stackoverflow.com/questions/1879395/how-do-i-generate-a-stream-from-a-string
-        // https://github.com/icsharpcode/SharpZipLib/wiki/Zip-Samples
-        // https://stackoverflow.com/questions/8624071/save-and-load-memorystream-to-from-a-file
+    private JSONNode getJsonFromZip(byte[] bytes) {
+        MemoryStream fileStream = new MemoryStream(bytes, 0, bytes.Length);
+        ZipFile zipFile = new ZipFile(fileStream);
 
+        foreach (ZipEntry entry in zipFile) {
+            if (Path.GetExtension(entry.Name).ToLower() == ".json") {
+                Stream zippedStream = zipFile.GetInputStream(entry);
+                StreamReader read = new StreamReader(zippedStream, true);
+                string json = read.ReadToEnd();
+                Debug.Log(json);
+                return JSON.Parse(json);
+            }
+        }
+
+        return null;
+    }
+
+    private void saveJsonAsZip(string url, string fileName, string s) {
         MemoryStream memStreamIn = new MemoryStream();
         StreamWriter writer = new StreamWriter(memStreamIn);
         writer.Write(s);
@@ -317,7 +256,7 @@ public class latkAnimVR : CustomImporter
         MemoryStream outputMemStream = new MemoryStream();
         ZipOutputStream zipStream = new ZipOutputStream(outputMemStream);
 
-        zipStream.SetLevel(3); //0-9, 9 being the highest level of compression
+        zipStream.SetLevel(3); // 0-9
 
         string fileNameMinusExtension = "";
         string[] nameTemp = fileName.Split('.');
@@ -333,8 +272,8 @@ public class latkAnimVR : CustomImporter
         StreamUtils.Copy(memStreamIn, zipStream, new byte[4096]);
         zipStream.CloseEntry();
 
-        zipStream.IsStreamOwner = false;    // False stops the Close also Closing the underlying stream.
-        zipStream.Close();          // Must finish the ZipOutputStream before using outputMemStream.
+        zipStream.IsStreamOwner = false;
+        zipStream.Close();
 
         outputMemStream.Position = 0;
 
@@ -344,16 +283,6 @@ public class latkAnimVR : CustomImporter
             file.Write(bytes, 0, bytes.Length);
             outputMemStream.Close();
         }
-
-        /*
-        // Alternative outputs:
-        // ToArray is the cleaner and easiest to use correctly with the penalty of duplicating allocated memory.
-        byte[] byteArrayOut = outputMemStream.ToArray();
-
-        // GetBuffer returns a raw buffer raw and so you need to account for the true length yourself.
-        byte[] byteArrayOut = outputMemStream.GetBuffer();
-        long len = outputMemStream.Length;
-        */
     }
 
 }
