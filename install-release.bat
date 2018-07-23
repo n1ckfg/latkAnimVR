@@ -1,5 +1,5 @@
 @echo off
 
-copy bin\Debug\latkAnimVR.dll %HOMEPATH%\Documents\ANIMVR\Plugins
+copy bin\Release\latkAnimVR.dll %HOMEPATH%\Documents\ANIMVR\Plugins
 
 @pause
