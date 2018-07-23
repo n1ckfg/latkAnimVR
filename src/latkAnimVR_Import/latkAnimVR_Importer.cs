@@ -7,10 +7,9 @@ using System.Text;
 using UnityEngine;
 
 [CustomImporter(Extension = "timeframe")]
-public class latkAnimVR_Importer : CustomImporter
-{
-    public override List<PlayableData> Import(string path)
-    {
+public class latkAnimVR_Importer : CustomImporter {
+
+    public override List<PlayableData> Import(string path) {
         var lines = File.ReadAllLines(path);
 
         SymbolData result = new SymbolData();
@@ -19,8 +18,7 @@ public class latkAnimVR_Importer : CustomImporter
         string basePath = Path.GetDirectoryName(path) + "/";
 
         int currentFrame = 0;
-        foreach (var line in lines)
-        {
+        foreach (var line in lines) {
             var parts = line.Split(' ');
             float duration = float.Parse(parts[0]);
             string modelFile = basePath + parts[1];
@@ -30,16 +28,14 @@ public class latkAnimVR_Importer : CustomImporter
 
             int frameDuration = Mathf.FloorToInt(duration * 12);
 
-            foreach (StaticMeshData meshData in meshes)
-            {
+            foreach (StaticMeshData meshData in meshes) {
                 meshData.AbsoluteTimeOffset = currentFrame;
                 meshData.Timeline.Frames.Clear();
                 meshData.InstanceMap.Clear();
                 meshData.LoopIn = AnimVR.LoopType.OneShot;
                 meshData.LoopOut = AnimVR.LoopType.OneShot;
 
-                for (int i = 0; i < frameDuration; i++)
-                {
+                for (int i = 0; i < frameDuration; i++) {
                     var frame = new SerializableTransform();
                     meshData.Timeline.Frames.Add(frame);
                     meshData.InstanceMap.Add(frame);
@@ -51,7 +47,7 @@ public class latkAnimVR_Importer : CustomImporter
             currentFrame += frameDuration;
         }
 
-
         return new List<PlayableData>() { result };
     }
+
 }
