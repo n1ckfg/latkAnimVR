@@ -6,8 +6,8 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-[CustomImporter(Extension = "timeframe")]
-public class latkAnimVR_Exporter : CustomImporter {
+[CustomImporter(Extension = "json")]
+public class latkAnimVR : CustomImporter {
 
     public override List<PlayableData> Import(string path) {
         var lines = File.ReadAllLines(path);
@@ -48,6 +48,10 @@ public class latkAnimVR_Exporter : CustomImporter {
         }
 
         return new List<PlayableData>() { result };
+    }
+
+    public override void Export(StageData stage, string path) {
+        File.WriteAllText(path, stage.name);
     }
 
 }

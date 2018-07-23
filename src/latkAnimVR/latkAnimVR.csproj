@@ -7,8 +7,8 @@
     <ProjectGuid>{A4C3E4C5-4699-4808-B8FE-4BDE8EED48CC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>latkAnimVR_Import</RootNamespace>
-    <AssemblyName>latkAnimVR_Import</AssemblyName>
+    <RootNamespace>latkAnimVR</RootNamespace>
+    <AssemblyName>latkAnimVR</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -44,7 +44,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="latkAnimVR_Importer.cs" />
+    <Compile Include="latkAnimVR.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
