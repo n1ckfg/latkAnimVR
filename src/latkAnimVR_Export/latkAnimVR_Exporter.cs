@@ -7,7 +7,7 @@ using System.Text;
 using UnityEngine;
 
 [CustomImporter(Extension = "timeframe")]
-public class ObjectSquence : CustomImporter
+public class latkAnimVR_Exporter : CustomImporter
 {
     public override List<PlayableData> Import(string path)
     {
