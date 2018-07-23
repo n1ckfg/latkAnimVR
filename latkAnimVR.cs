@@ -15,42 +15,10 @@ public class latkAnimVR : CustomImporter
 {
 
     public override List<PlayableData> Import(string path) {
-        var lines = File.ReadAllLines(path);
-
         SymbolData result = new SymbolData();
         result.displayName = Path.GetFileNameWithoutExtension(path);
 
-        string basePath = Path.GetDirectoryName(path) + "/";
-
-        int currentFrame = 0;
-        foreach (var line in lines) {
-            var parts = line.Split(' ');
-            float duration = float.Parse(parts[0]);
-            string modelFile = basePath + parts[1];
-
-            List<StaticMeshData> meshes;
-            if (!AnimAssimpImporter.ImportFile(modelFile, false, out meshes)) continue;
-
-            int frameDuration = Mathf.FloorToInt(duration * 12);
-
-            foreach (StaticMeshData meshData in meshes) {
-                meshData.AbsoluteTimeOffset = currentFrame;
-                meshData.Timeline.Frames.Clear();
-                meshData.InstanceMap.Clear();
-                meshData.LoopIn = AnimVR.LoopType.OneShot;
-                meshData.LoopOut = AnimVR.LoopType.OneShot;
-
-                for (int i = 0; i < frameDuration; i++) {
-                    var frame = new SerializableTransform();
-                    meshData.Timeline.Frames.Add(frame);
-                    meshData.InstanceMap.Add(frame);
-                }
-
-                result.Playables.Add(meshData);
-            }
-
-            currentFrame += frameDuration;
-        }
+        readLatkStrokes(ref result, path);
 
         return new List<PlayableData>() { result };
     }
@@ -59,6 +27,8 @@ public class latkAnimVR : CustomImporter
         //File.WriteAllText(path, stage.name);
         writeLatkStrokes(ref stage, path, stage.name);
     }
+
+    // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
     public void writeLatkStrokes(ref StageData stage, string path, string writeFileName) {
         List<string> FINAL_LAYER_LIST = new List<string>();
@@ -175,24 +145,25 @@ public class latkAnimVR : CustomImporter
         saveJsonAsZip(url, tempName, string.Join("\n", s.ToArray()));
     }
 
-    public void readLatkStrokes(ref StageData stage, string path) {
+    public void readLatkStrokes(ref SymbolData symbol, string path) {
         JSONNode jsonNode = getJsonFromZip(File.ReadAllBytes(path));
 
-        /*
         for (int f = 0; f < jsonNode["grease_pencil"][0]["layers"].Count; f++) {
             int currentLayer = f;
-            instantiateLayer();
-            layerList[currentLayer].name = jsonNode["grease_pencil"][0]["layers"][f]["name"];
+            TimeLineData layer = new TimeLineData();
+            symbol.TimeLines.Add(layer);
+            symbol.TimeLines[currentLayer].name = jsonNode["grease_pencil"][0]["layers"][f]["name"];
+
             for (int h = 0; h < jsonNode["grease_pencil"][0]["layers"][f]["frames"].Count; h++) {
                 int currentFrame = h;
-                instantiateFrame();
-                layerList[currentLayer].currentFrame = h;
+                FrameData frame = new FrameData();
+                symbol.TimeLines[currentLayer].Frames.Add(frame);
 
                 try {
                     float px = jsonNode["grease_pencil"][0]["layers"][f]["frames"][h]["parent_location"][0].AsFloat / 10f;
                     float py = jsonNode["grease_pencil"][0]["layers"][f]["frames"][h]["parent_location"][2].AsFloat / 10f;
                     float pz = jsonNode["grease_pencil"][0]["layers"][f]["frames"][h]["parent_location"][1].AsFloat / 10f;
-                    layerList[currentLayer].Frames[h].parentPos = new Vector3(px, py, pz);
+                    //symbol.TimeLines[currentLayer].Frames[currentFrame].transform.pos = new Vector3(px, py, pz);
                 } catch (UnityException e) { }
 
                 for (int i = 0; i < jsonNode["grease_pencil"][0]["layers"][f]["frames"][h]["strokes"].Count; i++) {
@@ -201,7 +172,9 @@ public class latkAnimVR : CustomImporter
                     float b = jsonNode["grease_pencil"][0]["layers"][f]["frames"][h]["strokes"][i]["color"][2].AsFloat;
                     Color c = new Color(r, g, b);
 
-                    instantiateStroke(c);
+                    LineData stroke = new LineData();
+                    symbol.TimeLines[currentLayer].Frames[currentFrame].Lines.Add(stroke);
+
                     for (int j = 0; j < jsonNode["grease_pencil"][0]["layers"][f]["frames"][h]["strokes"][i]["points"].Count; j++) {
                         float x = jsonNode["grease_pencil"][0]["layers"][f]["frames"][h]["strokes"][i]["points"][j]["co"][0].AsFloat;
                         float y = jsonNode["grease_pencil"][0]["layers"][f]["frames"][h]["strokes"][i]["points"][j]["co"][1].AsFloat;
@@ -209,12 +182,12 @@ public class latkAnimVR : CustomImporter
 
                         Vector3 p = new Vector3(x, y, z); //applyTransformMatrix(new Vector3(x, y, z));
 
-                        layerList[currentLayer].Frames[layerList[currentLayer].currentFrame].Lines[layerList[currentLayer].Frames[layerList[currentLayer].currentFrame].Lines.Count - 1].points.Add(p);
+                        symbol.TimeLines[currentLayer].Frames[currentFrame].Lines[symbol.TimeLines[currentLayer].Frames[currentFrame].Lines.Count - 1].Points.Add(p);
+                        symbol.TimeLines[currentLayer].Frames[currentFrame].Lines[symbol.TimeLines[currentLayer].Frames[currentFrame].Lines.Count - 1].colors.Add(c);
                     }
                 }
             }
         }
-        */
     }
 
     /*
